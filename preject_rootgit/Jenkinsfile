@@ -3,8 +3,8 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME  = "preject-rootgit"
-        IMAGE_TAG   = "${env.BUILD_NUMBER}"
+        IMAGE_NAME = "preject-rootgit"
+        IMAGE_TAG  = "${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -25,19 +25,13 @@ pipeline {
                 }
             }
         }
-}
 
         stage('Test') {
             steps {
                 echo '🧪 Vérification syntaxe PHP...'
-            dir('preject_rootgit') {
-                sh """
-                    docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} \
-                        find /var/www/html -name '*.php' -exec php -l {} \\;
-            """
+                sh "docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} find /var/www/html -name '*.php' -exec php -l {} \\;"
+            }
         }
-    }
-}
 
         stage('Push to Docker Hub') {
             steps {
@@ -47,12 +41,10 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    sh """
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} $DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}
-                        docker push $DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}
-                        docker logout
-                    """
+                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} $DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker push $DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker logout"
                 }
             }
         }
@@ -60,10 +52,10 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 echo '☸️ Déploiement sur Minikube...'
-                sh """
-                    kubectl apply -f k8s/manifests.yaml
-                    kubectl rollout status deployment/preject-rootgit --timeout=120s
-                """
+                dir('preject_rootgit') {
+                    sh "kubectl apply -f k8s/manifests.yaml"
+                    sh "kubectl rollout status deployment/preject-rootgit --timeout=120s"
+                }
             }
         }
 
