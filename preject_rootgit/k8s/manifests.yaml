@@ -21,8 +21,7 @@ spec:
     spec:
       containers:
         - name: php-app
-          image: TON_USERNAME/preject-rootgit:latest
-          ports:
+          image: chi7d/preject-rootgit:latest
             - containerPort: 80
           env:
             - name: DB_HOST
