@@ -43,7 +43,9 @@ pipeline {
                 )]) {
                     sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
                     sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} $DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} $DOCKER_USER/${IMAGE_NAME}:latest"
                     sh "docker push $DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker push $DOCKER_USER/${IMAGE_NAME}:latest"
                     sh "docker logout"
                 }
             }
@@ -54,7 +56,8 @@ pipeline {
                 echo '☸️ Déploiement sur Minikube...'
                 dir('preject_rootgit') {
                     sh "kubectl apply -f k8s/manifests.yaml"
-                    sh "kubectl rollout status deployment/preject-rootgit --timeout=120s"
+                    sh "kubectl rollout restart deployment/preject-rootgit"
+                    sh "kubectl rollout status deployment/preject-rootgit --timeout=300s"
                 }
             }
         }
