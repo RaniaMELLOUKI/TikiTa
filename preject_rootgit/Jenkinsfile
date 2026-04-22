@@ -51,28 +51,28 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Terraform - Deploy Infrastructure') {
             steps {
-                echo '☸️ Déploiement sur Minikube...'
-                dir('preject_rootgit') {
-                    sh "kubectl apply -f k8s/manifests.yaml"
-                    sh "kubectl rollout restart deployment/preject-rootgit"
-                    sh "kubectl rollout status deployment/preject-rootgit --timeout=300s"
+                echo '🏗️ Déploiement via Terraform...'
+                dir('preject_rootgit/terraform') {
+                    sh "terraform init -input=false"
+                    sh "terraform plan -var='image=chi7d/${IMAGE_NAME}:${IMAGE_TAG}' -out=tfplan"
+                    sh "terraform apply -auto-approve tfplan"
                 }
             }
         }
 
         stage('Health Check') {
             steps {
-                echo '🔍 Vérification que l app répond...'
-                sh "sleep 10 && kubectl get pods"
+                echo '🔍 Vérification des pods...'
+                sh "sleep 15 && kubectl get pods && kubectl get services"
             }
         }
     }
 
     post {
         success {
-            echo '✅ Pipeline réussi — application déployée !'
+            echo '✅ Pipeline réussi — application déployée via Terraform !'
         }
         failure {
             echo '❌ Pipeline en échec — voir les logs ci-dessus.'
