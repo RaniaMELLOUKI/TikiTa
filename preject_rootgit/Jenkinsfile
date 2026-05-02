@@ -26,10 +26,17 @@ pipeline {
             }
         }
 
-        stage('Test') {
+        stage('Syntax Check') {
             steps {
                 echo '🧪 Vérification syntaxe PHP...'
-                sh "docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} find /var/www/html -name '*.php' -exec php -l {} \\;"
+                sh "docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} find /var/www/html -name '*.php' -not -path '*/vendor/*' -exec php -l {} \\;"
+            }
+        }
+
+        stage('PHPUnit Tests') {
+            steps {
+                echo '🧪 Exécution des tests PHPUnit...'
+                sh "docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} bash -c 'cd /var/www/html && vendor/bin/phpunit --testdox'"
             }
         }
 
@@ -51,7 +58,7 @@ pipeline {
             }
         }
 
-        stage('Terraform - Deploy Infrastructure') {
+        stage('Terraform - Deploy') {
             steps {
                 echo '🏗️ Déploiement via Terraform...'
                 dir('preject_rootgit/terraform') {
@@ -72,7 +79,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline réussi — application déployée via Terraform !'
+            echo '✅ Pipeline réussi — tous les tests passent, application déployée !'
         }
         failure {
             echo '❌ Pipeline en échec — voir les logs ci-dessus.'
@@ -81,4 +88,4 @@ pipeline {
             sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
         }
     }
-}
+}}
