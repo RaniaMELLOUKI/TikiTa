@@ -1,14 +1,19 @@
 FROM php:8.2-apache
 
-RUN docker-php-ext-install mysqli pdo pdo_mysql
-RUN a2enmod rewrite
+RUN apt-get update && apt-get install -y \
+    libcurl4-openssl-dev \
+    unzip \
+    git \
+    && docker-php-ext-install mysqli pdo pdo_mysql \
+    && a2enmod rewrite \
+    && apt-get clean
 
 # Installer Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
 COPY . /var/www/html/
 
-# Installer les dependances PHPUnit
+# Installer PHPUnit
 RUN cd /var/www/html && composer install --no-interaction --no-progress 2>/dev/null || true
 
 # Nettoyage des fichiers DevOps
