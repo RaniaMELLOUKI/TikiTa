@@ -16,8 +16,8 @@ class ClassesIntegrationTest extends TestCase
     public function testAllClassesExist(): void
     {
         $expectedClasses = [
-            'Database', 'Artist', 'Categorie', 'Evenement',
-            'Inscription', 'Utilisateur', 'Validator', 'Notification',
+            'Database', 'artist', 'categorie', 'evenement',
+            'inscription', 'utilisateur', 'Validator', 'notification',
         ];
         foreach ($expectedClasses as $class) {
             $this->assertTrue(class_exists($class), "La classe $class doit exister");
