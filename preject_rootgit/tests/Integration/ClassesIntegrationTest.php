@@ -16,7 +16,7 @@ class ClassesIntegrationTest extends TestCase
     public function testAllClassesExist(): void
     {
         $expectedClasses = [
-            'Database', 'artist', 'categorie', 'evenement',
+            'Database', 'artiste', 'categorie', 'evenement',
             'inscription', 'utilisateur', 'Validator', 'notification',
         ];
         foreach ($expectedClasses as $class) {
