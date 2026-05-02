@@ -11,14 +11,13 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                echo '📥 Récupération du code...'
+                echo 'Recuperation du code...'
                 checkout scm
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo '🐳 Build de l image Docker...'
                 dir('preject_rootgit') {
                     sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
                     sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
@@ -28,26 +27,19 @@ pipeline {
 
         stage('Syntax Check') {
             steps {
-                echo '🧪 Vérification syntaxe PHP...'
                 sh "docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} find /var/www/html -name '*.php' -not -path '*/vendor/*' -exec php -l {} \\;"
             }
         }
 
         stage('PHPUnit Tests') {
             steps {
-                echo '🧪 Exécution des tests PHPUnit...'
                 sh "docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} bash -c 'cd /var/www/html && vendor/bin/phpunit --testdox'"
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                echo '📤 Push vers Docker Hub...'
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-credentials',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
                     sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} $DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}"
                     sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} $DOCKER_USER/${IMAGE_NAME}:latest"
@@ -60,7 +52,6 @@ pipeline {
 
         stage('Terraform - Deploy') {
             steps {
-                echo '🏗️ Déploiement via Terraform...'
                 dir('preject_rootgit/terraform') {
                     sh "terraform init -input=false"
                     sh "terraform plan -var='image=chi7d/${IMAGE_NAME}:${IMAGE_TAG}' -out=tfplan"
@@ -71,7 +62,6 @@ pipeline {
 
         stage('Health Check') {
             steps {
-                echo '🔍 Vérification des pods...'
                 sh "sleep 15 && kubectl get pods && kubectl get services"
             }
         }
@@ -79,13 +69,13 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline réussi — tous les tests passent, application déployée !'
+            echo 'Pipeline reussi !'
         }
         failure {
-            echo '❌ Pipeline en échec — voir les logs ci-dessus.'
+            echo 'Pipeline en echec.'
         }
         always {
             sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
         }
     }
-}}
+}
